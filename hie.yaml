@@ -1,0 +1,13 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:VintageLang"
+
+    - path: "app/Main.hs"
+      component: "VintageLang:exe:VintageLang-exe"
+
+    - path: "app/Paths_VintageLang.hs"
+      component: "VintageLang:exe:VintageLang-exe"
+
+    - path: "test"
+      component: "VintageLang:test:VintageLang-test"
