@@ -1,6 +1,7 @@
 module BinaryOperations (evalBinOp) where
 
 import Types
+import Control.Exception (throw, ErrorCall (ErrorCall))
 
 
 evalBinOp :: Value -> BinaryOperator -> Value -> Value
@@ -16,7 +17,7 @@ evalBinOp a (BinaryOperator ">=") b = evalBool $ a >= b
 evalBinOp a (BinaryOperator "==") b = evalBool $ a == b
 evalBinOp a (BinaryOperator "&&") b = boolToInt (intToBool a && intToBool b)
 evalBinOp a (BinaryOperator "!!") b = boolToInt (intToBool a || intToBool b)
-evalBinOp _ bo _ = error $ "incorrect binary operator: " ++ show bo
+evalBinOp _ bo _ = throw $ ErrorCall $ "incorrect binary operator: " ++ show bo
 
 
 
