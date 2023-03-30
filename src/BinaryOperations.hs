@@ -4,6 +4,8 @@ import Types
 import Control.Exception (throw, ErrorCall (ErrorCall))
 
 
+
+
 evalBinOp :: Value -> BinaryOperator -> Value -> Value
 evalBinOp a (BinaryOperator "+") b = a + b
 evalBinOp a (BinaryOperator "-") b = a - b

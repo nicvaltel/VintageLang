@@ -27,6 +27,8 @@ library
   exposed-modules:
       BinaryOperations
       Evaluator
+      SM
+      Syntax
       Types
   other-modules:
       Paths_VintageLang

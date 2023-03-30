@@ -28,6 +28,9 @@ type VarState a = State VarDict a
 
 type ErrorType = String
 
+type Config = (VarDict, [Value], [Value])
 
+type Stack = [Value]
 
+type SMConfig = (Stack, Config)
 

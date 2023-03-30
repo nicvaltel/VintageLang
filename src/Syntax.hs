@@ -1,11 +1,11 @@
 module Syntax where
 
-import Types ( Expression, Value, VarDict, Variable )
+import Types ( Expression, Value, VarDict, Variable, Config )
 import qualified Data.Map.Strict as Map
 import Evaluator qualified
 import Control.Monad.State.Strict (State, get, put, evalState)
 
-type Config = (VarDict, [Value], [Value])
+
 
 type App a = State Config a
 
