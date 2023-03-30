@@ -13,9 +13,7 @@ import qualified Data.Map.Strict as Map
 import Types
 import Control.Exception (catch, SomeException)
 
-type VarState a = State VarDict a
 
-type ErrorType = String
 
 type App a = ExceptT ErrorType  (State VarDict) a
 

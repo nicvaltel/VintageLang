@@ -2,6 +2,8 @@ module Types where
 
 
 import Data.Map.Strict (Map)
+import Control.Monad.State.Strict (State)
+import Control.Monad.Except (ExceptT)
 
 
 type Variable = String
@@ -13,11 +15,19 @@ type BoolVal = Int
 type VarDict = Map Variable Value
 
 newtype BinaryOperator = BinaryOperator String
-  deriving (Show)
+  deriving (Eq, Show)
 
 data Expression =
   ExprVar Variable
   | ExprVal Value
   | ExprApp Expression BinaryOperator Expression
+  deriving (Eq, Show)
+
+
+type VarState a = State VarDict a
+
+type ErrorType = String
+
+
 
 
