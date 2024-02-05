@@ -1,5 +1,7 @@
 module Main (main) where
 
+import Evaluator(runTestEvaluate)
 
 main :: IO ()
-main = pure ()
+main = do
+    runTestEvaluate
