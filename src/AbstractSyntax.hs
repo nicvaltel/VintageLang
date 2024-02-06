@@ -3,7 +3,13 @@ module AbstractSyntax
     Numbr (..),
     BinOperation (..),
     Expression (..),
-    EvalState (..),
+    Context (..),
+    Statement (..),
+    Input (..),
+    Output (..),
+    App (..),
+    readInput,
+    writeOutput,
   )
 where
 
@@ -24,9 +30,31 @@ data Expression
   | ExBinOp BinOperation Expression Expression
   | ExElvis Expression Expression Expression -- predicate ifTrue ifFalse
   | ExWhile Expression Expression Expression -- predicate loop expressionAfterLoop
-  | ExAssign Variable Expression
   | ExError String
   deriving (Eq, Ord, Show)
 
-newtype EvalState = EvalState (Map Variable Numbr)
+newtype Context = Context {unContext :: Map Variable Numbr}
   deriving (Eq, Ord, Show)
+
+data Statement
+  = StmAssign Variable Expression
+  | StmRead Variable
+  | StmWrite Expression
+  | StmSemicolon Statement Statement
+  deriving (Eq, Ord, Show)
+
+newtype Input = Input [Numbr]
+  deriving (Eq, Ord, Show)
+
+newtype Output = Output [Numbr]
+  deriving (Eq, Ord, Show)
+
+data App = App {appContext :: Context, appInput :: Input, appOutput :: Output, appError :: Maybe String}
+  deriving (Eq, Ord, Show)
+
+readInput :: Input -> Maybe (Numbr, Input)
+readInput (Input (n : nx)) = Just (n, Input nx)
+readInput (Input []) = Nothing
+
+writeOutput :: Numbr -> Output -> Output
+writeOutput numbr (Output out) = Output (numbr : out)
