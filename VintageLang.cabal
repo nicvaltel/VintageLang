@@ -27,6 +27,7 @@ library
   exposed-modules:
       AbstractSyntax
       Evaluator
+      StackMachine
   other-modules:
       Paths_VintageLang
   hs-source-dirs:

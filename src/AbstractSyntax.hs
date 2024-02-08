@@ -7,7 +7,7 @@ module AbstractSyntax
     Statement (..),
     Input (..),
     Output (..),
-    App (..),
+    Interpreter (..),
     readInput,
     writeOutput,
   )
@@ -28,9 +28,9 @@ data Expression
   = ExVar Variable
   | ExNum Numbr
   | ExBinOp BinOperation Expression Expression
-  | ExElvis Expression Expression Expression -- predicate ifTrue ifFalse
-  | ExWhile Expression Expression Expression -- predicate loop expressionAfterLoop
-  | ExError String
+  -- | ExElvis Expression Expression Expression -- predicate ifTrue ifFalse
+  -- | ExWhile Expression Expression Expression -- predicate loop expressionAfterLoop
+  -- | ExError String
   deriving (Eq, Ord, Show)
 
 newtype Context = Context {unContext :: Map Variable Numbr}
@@ -49,8 +49,12 @@ newtype Input = Input [Numbr]
 newtype Output = Output [Numbr]
   deriving (Eq, Ord, Show)
 
-data App = App {appContext :: Context, appInput :: Input, appOutput :: Output, appError :: Maybe String}
+data Interpreter = Interpreter {appContext :: Context, appInput :: Input, appOutput :: Output, appError :: Maybe String}
   deriving (Eq, Ord, Show)
+
+
+
+
 
 readInput :: Input -> Maybe (Numbr, Input)
 readInput (Input (n : nx)) = Just (n, Input nx)

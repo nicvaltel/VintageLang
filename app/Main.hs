@@ -1,7 +1,113 @@
 module Main (main) where
 
-import Evaluator(runTestEvaluate)
+import Evaluator
+import AbstractSyntax
+import StackMachine
+import Data.Map.Strict qualified as Map
 
 main :: IO ()
 main = do
     runTestEvaluate
+    putStrLn ""
+    runTestStackMachine
+
+
+testContext = Context $ Map.fromList [(Variable "x", Numbr 7), (Variable "y", Numbr 8), (Variable "z", Numbr 12)]
+
+testApp = Interpreter {appContext = testContext, appInput = Input [Numbr 555], appOutput = Output [], appError = Nothing}
+
+runTestEvaluate :: IO ()
+runTestEvaluate = do
+  let st = testContext
+  print $ evaluateExpr st (ExVar (Variable "z")) == ExNum (Numbr 12)
+  print $ evaluateExpr st (ExNum (Numbr 717)) == ExNum (Numbr 717)
+  print $ evaluateExpr st (ExNum (Numbr 717)) == ExNum (Numbr 717)
+--   print $ evaluateExpr st (ExError "Test Error") == ExError "Test Error"
+  print $ evaluateExpr st (ExBinOp OpPlus (ExVar (Variable "x")) (ExNum (Numbr 20))) == ExNum (Numbr 27)
+  print $ evaluateExpr st (ExBinOp OpMinus (ExNum (Numbr 30)) (ExVar (Variable "z"))) == ExNum (Numbr 18)
+  let x =
+        evaluateExpr
+          st
+          ( ExBinOp
+              OpMinus
+              ( evaluateExpr
+                  st
+                  ( ExBinOp
+                      OpPlus
+                      (evaluateExpr st (ExBinOp OpMult (ExVar (Variable "x")) (ExNum (Numbr 3))))
+                      (evaluateExpr st (ExBinOp OpDiv (ExVar (Variable "y")) (ExNum (Numbr 3))))
+                  )
+              )
+              (ExVar (Variable "z"))
+          )
+   in print $ x == ExNum (Numbr 11)
+--   print $
+--     evaluateExpr
+--       st
+--       ( ExElvis
+--           (ExBinOp OpGEq (ExVar (Variable "x")) (ExNum (Numbr 100)))
+--           (ExVar (Variable "y"))
+--           (ExVar (Variable "z"))
+--       )
+--       == ExNum (Numbr 12)
+  let app1 = appStep (StmWrite $ ExVar $ Variable "x") testApp
+  let app2 = appStep (StmRead $ Variable "hello") app1
+  print $ appStep (StmWrite $ ExVar $ Variable "y") app2
+
+  let steps = StmSemicolon (StmWrite $ ExVar $ Variable "x") (StmSemicolon (StmRead $ Variable "hello") (StmWrite $ ExVar $ Variable "y"))
+  print $ appStep steps testApp
+
+
+testSMApp = SMApp {smStack = Stack [], smContext = testContext, smInput = Input [Numbr 555], smOutput = Output []}
+
+
+runTestStackMachine :: IO ()
+runTestStackMachine = do
+    let app0 = testSMApp
+    let app1 = stackMachineStep (SOConst $ Numbr 2) app0
+    let app2 = stackMachineStep (SOConst $ Numbr 3) app1
+    let app3 = stackMachineStep (SOBinop OpMult) app2
+    let app4 = stackMachineStep (SOLd $ Variable "y") app3
+    let app5 = stackMachineStep (SOBinop OpPlus) app4
+    let app6 = stackMachineStep SOWrite app5
+    print app6
+
+    putStrLn ""
+
+    let smProgramm = [
+             SOConst $ Numbr 2,
+             SOConst $ Numbr 3,
+             SOBinop OpMult,
+             SOLd $ Variable "y",
+             SOBinop OpPlus,
+             SOWrite ]
+
+    print $ foldl (flip stackMachineStep) testSMApp smProgramm
+    putStrLn ""
+
+    let st = testContext
+    let expr =
+            evaluateExpr
+                st
+                ( ExBinOp
+                    OpMinus
+                    ( evaluateExpr
+                        st
+                        ( ExBinOp
+                            OpPlus
+                            (evaluateExpr st (ExBinOp OpMult (ExVar (Variable "x")) (ExNum (Numbr 3))))
+                            (evaluateExpr st (ExBinOp OpDiv (ExVar (Variable "y")) (ExNum (Numbr 3))))
+                        )
+                    )
+                    (ExVar (Variable "z"))
+                )
+    let smProgramm1 = compileExpressionToSM expr
+    print $ foldl (flip stackMachineStep) testSMApp smProgramm1
+    putStrLn ""
+
+    let steps = StmSemicolon (StmWrite $ ExVar $ Variable "x") (StmSemicolon (StmRead $ Variable "hello") (StmWrite $ ExVar $ Variable "y"))
+    let smProgramm2 = compileStatementToSM steps
+    print $ foldl (flip stackMachineStep) testSMApp smProgramm2
+    putStrLn ""
+    pure ()
+
