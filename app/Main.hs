@@ -16,6 +16,23 @@ testContext = Context $ Map.fromList [(Variable "x", Numbr 7), (Variable "y", Nu
 
 testApp = Interpreter {appContext = testContext, appInput = Input [Numbr 555], appOutput = Output [], appError = Nothing}
 
+testSMApp = SMApp {smStack = Stack [], smContext = testContext, smInput = Input [Numbr 555], smOutput = Output []}
+
+testExpr1 = evaluateExpr
+                testContext
+                ( ExBinOp
+                    OpMinus
+                    ( evaluateExpr
+                        testContext
+                        ( ExBinOp
+                            OpPlus
+                            (evaluateExpr testContext (ExBinOp OpMult (ExVar (Variable "x")) (ExNum (Numbr 3))))
+                            (evaluateExpr testContext (ExBinOp OpDiv (ExVar (Variable "y")) (ExNum (Numbr 3))))
+                        )
+                    )
+                    (ExVar (Variable "z"))
+                )
+
 runTestEvaluate :: IO ()
 runTestEvaluate = do
   let st = testContext
@@ -25,22 +42,8 @@ runTestEvaluate = do
 --   print $ evaluateExpr st (ExError "Test Error") == ExError "Test Error"
   print $ evaluateExpr st (ExBinOp OpPlus (ExVar (Variable "x")) (ExNum (Numbr 20))) == ExNum (Numbr 27)
   print $ evaluateExpr st (ExBinOp OpMinus (ExNum (Numbr 30)) (ExVar (Variable "z"))) == ExNum (Numbr 18)
-  let x =
-        evaluateExpr
-          st
-          ( ExBinOp
-              OpMinus
-              ( evaluateExpr
-                  st
-                  ( ExBinOp
-                      OpPlus
-                      (evaluateExpr st (ExBinOp OpMult (ExVar (Variable "x")) (ExNum (Numbr 3))))
-                      (evaluateExpr st (ExBinOp OpDiv (ExVar (Variable "y")) (ExNum (Numbr 3))))
-                  )
-              )
-              (ExVar (Variable "z"))
-          )
-   in print $ x == ExNum (Numbr 11)
+  let n11 = testExpr1
+   in print $ n11 == ExNum (Numbr 11)
 --   print $
 --     evaluateExpr
 --       st
@@ -50,15 +53,16 @@ runTestEvaluate = do
 --           (ExVar (Variable "z"))
 --       )
 --       == ExNum (Numbr 12)
+
   let app1 = appStep (StmWrite $ ExVar $ Variable "x") testApp
   let app2 = appStep (StmRead $ Variable "hello") app1
-  print $ appStep (StmWrite $ ExVar $ Variable "y") app2
+  let appStepResult = appStep (StmWrite $ ExVar $ Variable "y") app2
 
   let steps = StmSemicolon (StmWrite $ ExVar $ Variable "x") (StmSemicolon (StmRead $ Variable "hello") (StmWrite $ ExVar $ Variable "y"))
-  print $ appStep steps testApp
+  print $ appStep steps testApp == appStepResult
 
 
-testSMApp = SMApp {smStack = Stack [], smContext = testContext, smInput = Input [Numbr 555], smOutput = Output []}
+
 
 
 runTestStackMachine :: IO ()
@@ -70,9 +74,6 @@ runTestStackMachine = do
     let app4 = stackMachineStep (SOLd $ Variable "y") app3
     let app5 = stackMachineStep (SOBinop OpPlus) app4
     let app6 = stackMachineStep SOWrite app5
-    print app6
-
-    putStrLn ""
 
     let smProgramm = [
              SOConst $ Numbr 2,
@@ -82,32 +83,16 @@ runTestStackMachine = do
              SOBinop OpPlus,
              SOWrite ]
 
-    print $ foldl (flip stackMachineStep) testSMApp smProgramm
-    putStrLn ""
+    print $ foldl (flip stackMachineStep) testSMApp smProgramm == app6
 
-    let st = testContext
-    let expr =
-            evaluateExpr
-                st
-                ( ExBinOp
-                    OpMinus
-                    ( evaluateExpr
-                        st
-                        ( ExBinOp
-                            OpPlus
-                            (evaluateExpr st (ExBinOp OpMult (ExVar (Variable "x")) (ExNum (Numbr 3))))
-                            (evaluateExpr st (ExBinOp OpDiv (ExVar (Variable "y")) (ExNum (Numbr 3))))
-                        )
-                    )
-                    (ExVar (Variable "z"))
-                )
+    let expr = testExpr1
+
     let smProgramm1 = compileExpressionToSM expr
-    print $ foldl (flip stackMachineStep) testSMApp smProgramm1
-    putStrLn ""
+    print $ unStack (smStack $ foldl (flip stackMachineStep) testSMApp smProgramm1) == [Numbr 11]
 
-    let steps = StmSemicolon (StmWrite $ ExVar $ Variable "x") (StmSemicolon (StmRead $ Variable "hello") (StmWrite $ ExVar $ Variable "y"))
+    let steps = StmSemicolon (StmWrite $ ExVar $ Variable "x") (StmSemicolon (StmRead $ Variable "hello") (StmWrite $ ExVar $ Variable "hello"))
     let smProgramm2 = compileStatementToSM steps
-    print $ foldl (flip stackMachineStep) testSMApp smProgramm2
+    print $ smOutput (foldl (flip stackMachineStep) testSMApp smProgramm2) == Output [Numbr 555, Numbr 7]
     putStrLn ""
     pure ()
 
